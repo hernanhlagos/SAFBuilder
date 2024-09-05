@@ -12,6 +12,7 @@ import org.mozilla.universalchardet.UniversalDetector;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import safbuilder.utilities.Logger;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -70,10 +71,13 @@ class SAFPackage {
             inputCSV = new CsvReader(csvStream, detectCharsetOfFile(absoluteFileName));
         } catch (Exception e) {
             System.out.println(input.getAbsolutePath());
+            Logger.getInstance().log(input.getAbsolutePath());
             e.printStackTrace();
             System.out.println(e.getMessage());
+            Logger.getInstance().log(e.getMessage());
         }
         System.out.println("Opened CSV File:" + absoluteFileName);
+        Logger.getInstance().log("Opened CSV File:" + absoluteFileName);
     }
 
     /**
@@ -100,9 +104,11 @@ class SAFPackage {
         if(charset == null) {
             charset = "UTF-8";
             System.out.println("Didn't properly detect the charset of file. Setting to UTF-8 as a fallback");
+            Logger.getInstance().log("Didn't properly detect the charset of file. Setting to UTF-8 as a fallback");
         }
         Charset detectedCharset = Charset.forName(charset);
         System.out.println("Detected input CSV as:" + detectedCharset.displayName());
+        Logger.getInstance().log("Detected input CSV as:" + detectedCharset.displayName());
         return detectedCharset;
     }
 
@@ -148,8 +154,10 @@ class SAFPackage {
         try {
             ZipUtil.createZip(safDirectory, zipDest);
             System.out.println("ZIP file located at: " + new File(zipDest).getAbsolutePath());
+            Logger.getInstance().log("ZIP file located at: " + new File(zipDest).getAbsolutePath());
         } catch (IOException e) {
             System.out.println("ERROR Zipping SAF: " + e.getMessage());
+            Logger.getInstance().log("ERROR Zipping SAF: " + e.getMessage());
         }
     }
 
@@ -169,6 +177,7 @@ class SAFPackage {
 
         newDirectory.mkdir();
         System.out.println("Output directory is: " + newDirectory.getAbsolutePath());
+        Logger.getInstance().log("Output directory is: " + newDirectory.getAbsolutePath());
     }
 
     private static String[][] fileListFake;
@@ -218,6 +227,7 @@ class SAFPackage {
         for (int i = 0; i < fileListFake.length; i++) {
             if (fileListFake[i][1].contentEquals(numHits.toString())) {
                 System.out.println("File: " + fileListFake[i][0] + " has been used " + numHits + " times.");
+                Logger.getInstance().log("File: " + fileListFake[i][0] + " has been used " + numHits + " times.");
             }
         }
     }
@@ -415,8 +425,10 @@ class SAFPackage {
                 contentsWriter.newLine();
             } catch (FileNotFoundException fnf) {
                 System.out.println("There is no file named " + currentFile + " in " + input.getPath() + " while making " + itemDirectory);
+                Logger.getInstance().log("There is no file named " + currentFile + " in " + input.getPath() + " while making " + itemDirectory);
             } catch (IOException e) {
                 e.printStackTrace();
+                Logger.getInstance().log(e.getMessage());
             }
         }
     }
@@ -556,6 +568,7 @@ class SAFPackage {
         File csvFile = new File(pathToCSV);
         File directory = csvFile.getParentFile();
         System.out.println("Creating manifest of files in directory:" + directory + " will output results to: " + csvFile);
+        Logger.getInstance().log("Creating manifest of files in directory:" + directory + " will output results to: " + csvFile);
 
         //TODO, if CSV doesn't exist, errors get reported
         openCSV(csvFile.getParent(), csvFile.getName());
@@ -569,23 +582,29 @@ class SAFPackage {
             String[] files = input.list();
 
             System.out.print("Building manifest:");
+            Logger.getInstance().log("Building manifest:");
             for (int i = 0; i < files.length; i++) {
                 //Skip dot files, blanks, and the current CSV file.
                 if(StringUtils.isEmpty(files[i]) || files[i].startsWith(".") || files[i].equals(csvFile.getName())) {
                     System.out.print("Skip:[" + files[i]+"]");
+                    Logger.getInstance().log("Skip:[" + files[i]+"]");
                     continue;
                 }
 
                 csvWriter.write(files[i]);
                 csvWriter.endRecord();
                 System.out.print(".");
+                Logger.getInstance().log(".");
             }
 
             System.out.println(" - " + files.length + " files were added to manifest.");
+            Logger.getInstance().log(" - " + files.length + " files were added to manifest.");
 
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());
+            Logger.getInstance().log("Error: " + e.getMessage());
             System.err.println(e.getMessage());
+            Logger.getInstance().log(e.getMessage());
         } finally {
             csvWriter.close();
         }
@@ -603,6 +622,7 @@ class SAFPackage {
                 return alphanumComparator.compare(a.getName().getBaseName(), b.getName().getBaseName());
             } catch (Exception e) {
                 System.out.println("ERROR IN COMPARISON");
+                Logger.getInstance().log("ERROR IN COMPARISON");
                 return 0;
             }
 
@@ -642,8 +662,10 @@ class SAFPackage {
             contentsWriter.newLine();
         } catch (FileNotFoundException fnf) {
             System.out.println("There is no file named " + fileObject.getName().getBaseName() + " while making " + destinationDirectory.getName().getBaseName());
+            Logger.getInstance().log("There is no file named " + fileObject.getName().getBaseName() + " while making " + destinationDirectory.getName().getBaseName());
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getInstance().log(e.getMessage());
         }
     }
 }

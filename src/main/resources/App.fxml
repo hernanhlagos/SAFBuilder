@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="669.0" prefWidth="1003.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="safbuilder.ui.AppController">
+   <children>
+      <Button fx:id="btnCSV" layoutX="40.0" layoutY="57.0" mnemonicParsing="false" onAction="#loadCSV" prefHeight="26.0" prefWidth="167.0" text="Select metadata CSV file" />
+      <TextField fx:id="txtFieldCSV" layoutX="233.0" layoutY="57.0" prefHeight="26.0" prefWidth="736.0" />
+      <Label layoutX="40.0" layoutY="118.0" text="Output name batch:" />
+      <TextField fx:id="txtFieldBatchName" layoutX="163.0" layoutY="113.0" prefHeight="26.0" prefWidth="193.0" promptText="SimpleArchiveFormat" />
+      <CheckBox fx:id="checkBoxZipFile" layoutX="381.0" layoutY="118.0" mnemonicParsing="false" selected="true" text="ZIP file" />
+      <Button fx:id="btnCreateBatch" layoutX="834.0" layoutY="113.0" mnemonicParsing="false" onAction="#createBatch" prefHeight="26.0" prefWidth="135.0" text="Create batch now">
+         <graphic>
+            <FontAwesomeIconView fill="#006f23" glyphName="PLAY" />
+         </graphic></Button>
+      <TextArea fx:id="textAreaLog" editable="false" layoutX="40.0" layoutY="169.0" prefHeight="453.0" prefWidth="929.0">
+         <font>
+            <Font name="SF Mono Regular" size="13.0" />
+         </font></TextArea>
+      <Button fx:id="btnClearLog" layoutX="40.0" layoutY="629.0" mnemonicParsing="false" onAction="#clearLog" text="Clear log" />
+   </children>
+</AnchorPane>

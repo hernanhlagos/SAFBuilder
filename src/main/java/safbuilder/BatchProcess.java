@@ -1,12 +1,27 @@
 package safbuilder;
 
 import org.apache.commons.cli.*;
+import safbuilder.ui.App;
 
 import java.io.IOException;
 
 public class BatchProcess {
 
     public static void main(String[] args) throws IOException, ParseException {
+
+        // Check if no arguments were passed
+        if (args.length == 0) {
+            // No arguments provided, launch the JavaFX application
+            App.main(new String[]{}); // Calls App.main() to start the JavaFX application
+            return; // Ends the execution of this method
+        } else {
+            // If arguments are provided, run the batch process CLI logic
+            BatchProcessCLI(args);
+        }
+
+    }
+
+    public static void BatchProcessCLI(String[] args) throws ParseException, IOException {
         CommandLineParser parser = new PosixParser();
         Options options = new Options();
         options.addOption("c", "csv", true, "Filename with path of the CSV spreadsheet. This must be in the same directory as the content files");

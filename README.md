@@ -40,6 +40,17 @@ usage: SAFBuilder
  -z,--zip         (optional) ZIP the output
  ```
 
+UI Help and Usage:
+
+SAFBuilder can be run with a graphical user interface (GUI) if no command-line parameters are provided. When executed without any arguments, the application automatically launches its GUI, allowing users to interact with a visual interface to create and manage packages. This provides an intuitive way to use SAFBuilder without needing to use command-line options.
+
+```bash
+git clone https://github.com/hernanhlagos/SAFBuilder.git
+cd SAFBuilder
+./safbuilder.sh
+```
+* Graphical interface view
+![Image of a sample input spreadsheet with metadata](https://github.com/user-attachments/assets/2ba2ceb7-d76b-42f6-a0f3-3f2297f99a33)
 
 Input
 -----

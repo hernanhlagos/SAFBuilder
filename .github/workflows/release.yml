@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
 
     steps:
       - name: Checkout code
@@ -47,10 +47,18 @@ jobs:
           mkdir -p dist
           # Agrupar las extensiones con paréntesis para que el -exec funcione con todas
           find target/installer \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} dist/ \;
+          
+          # Renombrar archivos de Mac para incluir arquitectura
+          if [ "${{ matrix.os }}" == "macos-13" ]; then
+            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-Intel.dmg"; done
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-AppleSilicon.dmg"; done
+          fi
+
           # Crear portable zip
           mvn package -Pnative-app-image -DskipTests
           cd target/installer
-          zip -r ../../dist/SAFBuilder-${{ runner.os }}-Portable.zip SAFBuilder*
+          zip -r ../../dist/SAFBuilder-${{ matrix.os }}-Portable.zip SAFBuilder*
         shell: bash
 
       - name: Prepare Artifacts (Windows)
@@ -66,7 +74,7 @@ jobs:
       - name: Upload Artifacts for Inspection
         uses: actions/upload-artifact@v4
         with:
-          name: SAFBuilder-${{ runner.os }}-Binaries
+          name: SAFBuilder-${{ matrix.os }}-Binaries
           path: dist/*
 
       - name: Upload Release Assets

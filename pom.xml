@@ -41,6 +41,9 @@
         <slf4j.version>2.0.16</slf4j.version>
         <logback.version>1.5.12</logback.version>
 
+        <!-- Propiedades dinámicas para jpackage (vacío por defecto) -->
+        <jpackage.os.args></jpackage.os.args>
+
         <!-- UI -->
         <flatlaf.version>3.5.4</flatlaf.version>
 
@@ -215,5 +218,130 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Configuración específica para Windows: añade accesos directos -->
+        <profile>
+            <id>os-windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties>
+                <jpackage.os.args>--win-shortcut --win-menu</jpackage.os.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>native-installer</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${project.build.directory}/app-jar" />
+                                        <copy file="${project.build.directory}/${project.build.finalName}.jar" 
+                                              tofile="${project.build.directory}/app-jar/safbuilder.jar" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jpackage</executable>
+                                    <commandlineArgs>
+                                        --input ${project.build.directory}/app-jar
+                                        --dest ${project.build.directory}/installer
+                                        --name SAFBuilder
+                                        --main-jar safbuilder.jar
+                                        --main-class safbuilder.cli.BatchProcess
+                                        --app-version 2.0.0
+                                        --vendor HernanLagos
+                                        --copyright "Copyright 2025"
+                                        --description "DSpace SAF Package Builder"
+                                        ${jpackage.os.args}
+                                    </commandlineArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>native-app-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${project.build.directory}/app-jar" />
+                                        <copy file="${project.build.directory}/${project.build.finalName}.jar" 
+                                              tofile="${project.build.directory}/app-jar/safbuilder.jar" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jpackage</executable>
+                                    <commandlineArgs>
+                                        --input ${project.build.directory}/app-jar
+                                        --dest ${project.build.directory}/installer
+                                        --name SAFBuilder
+                                        --main-jar safbuilder.jar
+                                        --main-class safbuilder.cli.BatchProcess
+                                        --type app-image
+                                        --app-version 2.0.0
+                                        --vendor HernanLagos
+                                        --copyright "Copyright 2025"
+                                        --description "DSpace SAF Package Builder"
+                                    </commandlineArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

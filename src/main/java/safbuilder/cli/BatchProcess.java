@@ -18,7 +18,7 @@ import java.io.File;
  *
  * <p>Usage:</p>
  * <pre>
- *   safbuilder -c /path/to/metadata.csv [-z] [-o OutputName] [-s]
+ *   safbuilder -c /path/to/metadata.csv [-d /path/to/files] [-D /path/to/output] [-z] [-o OutputName]
  *   safbuilder -c /path/to/manifest.csv -m
  * </pre>
  */
@@ -27,6 +27,16 @@ public class BatchProcess {
     private static final Logger log = LoggerFactory.getLogger(BatchProcess.class);
 
     public static void main(String[] args) {
+        // Si no hay argumentos, lanzamos la interfaz gráfica
+        if (args.length == 0) {
+            log.info("Iniciando interfaz gráfica (FlatLaf)...");
+            com.formdev.flatlaf.FlatDarkLaf.setup();
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                new safbuilder.ui.MainWindow().setVisible(true);
+            });
+            return;
+        }
+
         Options options = buildOptions();
         CommandLineParser parser = new DefaultParser();
 
@@ -62,11 +72,16 @@ public class BatchProcess {
         BuildConfig config;
         try {
             BuildConfig.Builder builder = BuildConfig.builder(csvFile)
-                    .exportToZip(cmd.hasOption('z'))
-                    .useSymbolicLinks(cmd.hasOption('s'));
+                    .exportToZip(cmd.hasOption('z'));
 
             if (cmd.hasOption('o')) {
                 builder.outputName(cmd.getOptionValue('o'));
+            }
+            if (cmd.hasOption('d')) {
+                builder.inputDirectory(new File(cmd.getOptionValue('d')));
+            }
+            if (cmd.hasOption('D')) {
+                builder.outputDirectory(new File(cmd.getOptionValue('D')));
             }
             config = builder.build();
         } catch (IllegalArgumentException e) {
@@ -97,10 +112,11 @@ public class BatchProcess {
 
     private static Options buildOptions() {
         Options opts = new Options();
-        opts.addOption("c", "csv",          true,  "Ruta al archivo CSV de metadatos (debe estar en el mismo directorio que los archivos de contenido).");
+        opts.addOption("c", "csv",          true,  "Ruta al archivo CSV de metadatos.");
+        opts.addOption("d", "directory",    true,  "(Opcional) Directorio de archivos PDF/bitstreams. Por defecto: carpeta del CSV.");
+        opts.addOption("D", "destination",  true,  "(Opcional) Directorio donde se guardará el SAF y el ZIP. Por defecto: carpeta del CSV.");
         opts.addOption("h", "help",         false, "Muestra esta ayuda.");
         opts.addOption("m", "manifest",     false, "Genera un CSV de manifiesto listando todos los archivos del directorio. Requiere -c.");
-        opts.addOption("s", "symbolic-link",false, "Crea enlaces simbólicos en lugar de copiar los archivos.");
         opts.addOption("z", "zip",          false, "(Opcional) Comprime el paquete SAF en un archivo ZIP.");
         opts.addOption("o", "output-name",  true,  "(Opcional) Nombre personalizado para el directorio de salida. Por defecto: SimpleArchiveFormat.");
         return opts;

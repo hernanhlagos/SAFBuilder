@@ -19,4 +19,4 @@ for i in ${!args[*]}; do
   fi
 done
 
-mvn --quiet exec:java -Dexec.mainClass="safbuilder.BatchProcess" -Dexec.args="$argsOut"
+mvn --quiet exec:java -Dexec.mainClass="safbuilder.cli.BatchProcess" -Dexec.args="$argsOut"

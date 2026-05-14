@@ -47,7 +47,7 @@ public class SAFPackage {
     /**
      * Builds a SAF package according to the supplied configuration.
      *
-     * @param config   Build parameters (CSV path, output name, zip, symlinks).
+     * @param config   Build parameters (CSV path, output name, zip).
      * @param listener Receives progress/error/completion notifications.
      * @return A {@link BuildResult} describing what was produced.
      */
@@ -58,7 +58,7 @@ public class SAFPackage {
 
         File csvFile      = config.getCsvFile();
         File inputDir     = config.getInputDirectory();
-        File outputDir    = new File(inputDir, config.getOutputName());
+        File outputDir    = new File(config.getOutputDirectory(), config.getOutputName());
 
         log.info("Starting SAF build — CSV: {}", csvFile.getAbsolutePath());
         listener.onProgress("Iniciando procesamiento de " + csvFile.getName(), 0);
@@ -107,7 +107,7 @@ public class SAFPackage {
             File zipFile = null;
             if (config.isExportToZip()) {
                 listener.onProgress("Generando ZIP…", 92);
-                File zipDest = new File(inputDir, config.getOutputName() + ".zip");
+                File zipDest = new File(config.getOutputDirectory(), config.getOutputName() + ".zip");
                 ZipUtil.createZip(outputDir.getAbsolutePath(), zipDest.getAbsolutePath());
                 zipFile = zipDest;
                 log.info("ZIP created at: {}", zipDest.getAbsolutePath());
@@ -288,13 +288,7 @@ public class SAFPackage {
                 return;
             }
 
-            if (config.isUseSymbolicLinks()) {
-                Path link   = new File(itemDir, new File(filename).getName()).toPath();
-                Path target = srcFile.toPath();
-                Files.createSymbolicLink(link, target);
-            } else {
-                FileUtils.copyFileToDirectory(srcFile, itemDir);
-            }
+            FileUtils.copyFileToDirectory(srcFile, itemDir);
 
             fileUsage.merge(filename, 1, Integer::sum);
 

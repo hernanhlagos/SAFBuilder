@@ -1,85 +1,70 @@
-# SAFBuilder - Item Packager from CSV
+# SAFBuilder — Modernized Version (v2.0.0)
 
-A tool that turns content files and a metadata spreadsheet into a Simple Archive Format package, which easily allows for batch import to DSpace, an Institutional Repository.
+A tool that turns content files and a metadata spreadsheet into a **Simple Archive Format (SAF)** package for batch import to DSpace.
 
-See also: [Wiki entry on Simple Archive Format Packager](https://wiki.duraspace.org/display/DSPACE/Simple+Archive+Format+Packager "Simple Archive Format Package wiki entry")
+This version is a modernization of the original [DSpace-Labs/SAFBuilder](https://github.com/DSpace-Labs/SAFBuilder), updated to **Java 17** with a clean architecture and a modern **Desktop UI**.
 
-## Similar projects to also consider
-**This SAFBuilder tool is looking for a new maintainer & hasn't received updates in some time.**
+## 🚀 Key Modern Features
+*   **Decoupled Directories:** No longer restricted to the CSV folder. You can independently select the **Source Directory** (where your PDFs are) and the **Output Directory** (where the SAF package will be generated).
+*   **Modern UI:** Dark mode interface powered by FlatLaf for a professional look and feel.
+*   **Native Packaging:** Generate professional installers (.dmg for Mac, .msi for Windows) or portable app folders that include their own Java runtime.
 
-Other community projects/programs have been developed that also turn a CSV into a Simple Archive Format package. They include:
-* https://github.com/jcreel/SAFCreator
-* https://github.com/isido/saf-archiver
-* https://github.com/lib-uoguelph-ca/dspace-csv-archive
+## Requirements
+* **Java 17** or higher
+* **Maven 3.8+**
+* **WiX Toolset v3.11** (Only required for creating Windows `.msi` installers)
 
-
-## Installation / Usage
-To Install and generate an ItemImport package:
-
+## Quick Start (GUI)
+The easiest way to use SAFBuilder is via its modern interface:
 ```bash
-git clone https://github.com/DSpace-Labs/SAFBuilder.git
-cd SAFBuilder
-./safbuilder.sh -c src/sample_data/AAA_batch-metadata.csv -z
+# Run the local script to launch the UI
+./safbuilder.sh
 ```
 
-Prerequisites:
-
- * Command line / terminal
- * Java JDK
- * Git
- * Maven
-
-Help Usage (i.e. ./safbuilder.sh --help):
-
-```
-usage: SAFBuilder   
- -c,--csv <arg>   Filename with path of the CSV spreadsheet. This must be
-                  in the same directory as the content files
- -h,--help        Display the Help
- -o,--output-name (optional) Custom folder name for the output directory. Default: "SimpleArchiveFormat"
- -z,--zip         (optional) ZIP the output
- ```
-
-
-Input
------
-A spreadsheet (.csv) with the following columns:
-* filename for the bitstream/file
-* metadata with namespace.element.(qualifer). Examples would be: dc.description or dc.contributor.author
-![Image of a sample input spreadsheet with metadata](https://user-images.githubusercontent.com/58014/54175778-6e541a00-4462-11e9-9196-c3a3ae76f6e0.png "sample spreadsheet with metadata")
-
-
-Output
-------
-The output is a directory "SimpleArchiveFormat" in the same directory as the CSV. If you specify to have a ZIP file created, it is in the same directory as the CSV, and will be named SimpleArchiveFormat.zip
-```
-SimpleArchiveFormat/
-  item_000/
-      dublin_core.xml         -- qualified Dublin Core metadata for metadata fields belonging to the dc schema
-      metadata_[prefix].xml   -- metadata in another schema, the [prefix] is the short name of the schema as registered with the metadata registry
-      contents                -- text file containing one line per filename
-      file_1.doc              -- files to be added as bitstreams to the item
-      file_2.pdf
-  item_001/
-      dublin_core.xml
-      contents
-      file_1.png
-  item_...
+## Quick Start (CLI)
+To process a CSV and generate a SAF package from the command line:
+```bash
+./safbuilder.sh -c path/to/metadata.csv -d path/to/bitstreams -D path/to/output -z
 ```
 
-You can then import the SimpleArchiveFormat directory into DSpace as-is (see https://wiki.duraspace.org/display/DSDOC5x/Importing+and+Exporting+Items+via+Simple+Archive+Format for further information). Or you can import the ZIP file into portions of DSpace that enable Batch Import from Zip files.
+## Usage Options
+```bash
+usage: safbuilder -c <metadata.csv> [options]
+ -c,--csv <arg>           Path to the metadata CSV file.
+ -d,--directory <arg>     (Optional) Source directory where content files (PDFs) are located.
+ -D,--destination <arg>   (Optional) Destination directory for the generated SAF package.
+ -z,--zip                 (Optional) ZIP the resulting SAF directory (saved in Destination).
+ -o,--output-name <arg>   (Optional) Custom name for the output folder (default: SimpleArchiveFormat).
+ -m,--manifest            (Optional) Generate a skeleton CSV manifest from files in a folder.
+ -h,--help                Show this help.
+```
 
+## 📦 How to Package & Distribute
 
-Other Things
------
+### 1. Native Installer (.dmg / .msi)
+Creates a formal installer for your operating system.
+*   **Mac:** `mvn clean package -Pnative-installer -DskipTests` (Generates `.dmg`)
+*   **Windows:** `mvn clean package -Pnative-installer -DskipTests` (Generates `.msi`, requires WiX 3.11)
 
-Author: Peter Dietz & DSpace Contributors
+### 2. Portable Version (App Image)
+Creates a self-contained folder that can be shared and run without installation.
+```bash
+mvn clean package -Pnative-app-image -DskipTests
+```
+The result will be in `target/installer/SAFBuilder`.
 
-Version History:
+### 3. Executable JAR
+The classic single-file distribution:
+```bash
+mvn clean package -DskipTests
+```
 
-* Current 
-* v5 (2019-03-12) - Use -o to rename output directory
-* v4 (2016-05-06) - Use -c to specify csv, and -z to indicate to zip the contents
-* v3, v2, v1 - ./safbuilder.sh /path/to/parentDirectory file.csv
+## Roadmap & Progress
+- [x] **Stage 1-2**: Upgrade to Java 17 and pin dependencies.
+- [x] **Stage 3**: Refactor to Core/CLI/Util architecture.
+- [x] **Stage 4**: Migrate to JUnit 5 with improved coverage.
+- [x] **Stage 5**: Create a modern Desktop UI (Swing + FlatLaf).
+- [x] **Stage 6**: Create native installers and portable versions using `jpackage`.
 
-Older versions of this tool required a space between the parent directory file path, and the filename of the CSV. The current version combines the path and the filename. It also allows the ability to ZIP the contents.
+---
+*Maintained by: Hernán Lagos*

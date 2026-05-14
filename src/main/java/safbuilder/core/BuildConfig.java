@@ -13,31 +13,32 @@ import java.io.File;
 public final class BuildConfig {
 
     private final File csvFile;
+    private final File inputDirectory;
+    private final File outputDirectory;
     private final String outputName;
     private final boolean exportToZip;
-    private final boolean useSymbolicLinks;
 
     private BuildConfig(Builder b) {
         this.csvFile        = b.csvFile;
+        this.inputDirectory = b.inputDirectory != null ? b.inputDirectory : b.csvFile.getParentFile();
+        this.outputDirectory = b.outputDirectory != null ? b.outputDirectory : b.csvFile.getParentFile();
         this.outputName     = b.outputName;
         this.exportToZip    = b.exportToZip;
-        this.useSymbolicLinks = b.useSymbolicLinks;
     }
 
-    /** The CSV metadata file. Its parent directory is the input directory. */
     public File getCsvFile() { return csvFile; }
 
-    /** Parent directory of the CSV — all content files must live here. */
-    public File getInputDirectory() { return csvFile.getParentFile(); }
+    /** The directory where the actual bitstreams (PDFs, etc.) are located. */
+    public File getInputDirectory() { return inputDirectory; }
+
+    /** The directory where SAF will be created. */
+    public File getOutputDirectory() { return outputDirectory; }
 
     /** Name of the output SAF directory (default: {@code SimpleArchiveFormat}). */
     public String getOutputName() { return outputName; }
 
     /** Whether to ZIP the output directory after building. */
     public boolean isExportToZip() { return exportToZip; }
-
-    /** Whether to create symbolic links instead of copying files. */
-    public boolean isUseSymbolicLinks() { return useSymbolicLinks; }
 
     // -------------------------------------------------------------------------
 
@@ -47,9 +48,10 @@ public final class BuildConfig {
 
     public static final class Builder {
         private final File csvFile;
+        private File    inputDirectory = null;
+        private File    outputDirectory = null;
         private String  outputName     = "SimpleArchiveFormat";
         private boolean exportToZip    = false;
-        private boolean useSymbolicLinks = false;
 
         private Builder(File csvFile) {
             if (csvFile == null)       throw new IllegalArgumentException("csvFile must not be null");
@@ -58,22 +60,10 @@ public final class BuildConfig {
             this.csvFile = csvFile;
         }
 
-        public Builder outputName(String outputName) {
-            if (outputName != null && !outputName.isBlank()) {
-                this.outputName = outputName.strip();
-            }
-            return this;
-        }
-
-        public Builder exportToZip(boolean exportToZip) {
-            this.exportToZip = exportToZip;
-            return this;
-        }
-
-        public Builder useSymbolicLinks(boolean useSymbolicLinks) {
-            this.useSymbolicLinks = useSymbolicLinks;
-            return this;
-        }
+        public Builder outputName(String outputName) { this.outputName = outputName; return this; }
+        public Builder inputDirectory(File inputDirectory) { this.inputDirectory = inputDirectory; return this; }
+        public Builder outputDirectory(File outputDirectory) { this.outputDirectory = outputDirectory; return this; }
+        public Builder exportToZip(boolean exportToZip) { this.exportToZip = exportToZip; return this; }
 
         public BuildConfig build() {
             return new BuildConfig(this);

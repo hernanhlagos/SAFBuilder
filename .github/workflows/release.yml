@@ -6,6 +6,9 @@ on:
       - 'v*' # Se activa cuando creas un tag como v2.0.0
   workflow_dispatch: # Permite ejecución manual desde la web para pruebas
 
+permissions:
+  contents: write # Necesario para crear el Release y subir archivos
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}

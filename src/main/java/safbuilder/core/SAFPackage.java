@@ -69,6 +69,10 @@ public class SAFPackage {
             Charset charset = CharsetDetector.detect(csvFile.getAbsolutePath());
             log.info("Detected CSV charset: {}", charset.displayName());
 
+            if (!"UTF-8".equalsIgnoreCase(charset.name())) {
+                throw new IOException("El archivo CSV no es UTF-8 (se detectó " + charset.name() + "). SAFBuilder requiere UTF-8 para garantizar la compatibilidad con DSpace.");
+            }
+
             // 2. Scan all files in the input directory for usage tracking
             listener.onProgress("Escaneando archivos en el directorio de entrada…", 10);
             Map<String, Integer> fileUsage = scanDirectory(inputDir);

@@ -25,6 +25,13 @@ public class CsvValidator {
 
         try {
             Charset charset = CharsetDetector.detect(csvFile.getAbsolutePath());
+            result.setDetectedCharset(charset.name());
+            
+            if (!"UTF-8".equalsIgnoreCase(charset.name())) {
+                result.addError("El archivo NO es UTF-8 (se detectó " + charset.name() + "). DSpace requiere UTF-8 para evitar corrupción de caracteres. Por favor, guarde su CSV como 'CSV UTF-8 (delimitado por comas)' en Excel.");
+                return result;
+            }
+
             try (CSVParser parser = CSVParser.parse(csvFile, charset, 
                     CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build())) {
                 

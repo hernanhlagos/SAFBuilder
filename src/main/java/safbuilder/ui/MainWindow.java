@@ -140,7 +140,9 @@ public class MainWindow extends JFrame {
         tablePanel.add(tableScroll, BorderLayout.CENTER);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePanel, logScroll);
-        splitPane.setDividerLocation(350);
+        splitPane.setResizeWeight(0.5); // 50/50 al redimensionar
+        splitPane.setContinuousLayout(true);
+        splitPane.setDividerLocation(200);
         mainPanel.add(splitPane, BorderLayout.CENTER);
 
         // --- Panel Inferior: Progreso y Acción ---
@@ -206,7 +208,7 @@ public class MainWindow extends JFrame {
         safbuilder.core.ValidationResult result = validator.validate(csv);
 
         if (result.isValid() && result.getErrors().isEmpty()) {
-            validationLabel.setText("✓ CSV Estructura Válida (" + result.getHeaders().size() + " columnas)");
+            validationLabel.setText("✓ CSV Estructura Válida [" + result.getDetectedCharset() + "] (" + result.getHeaders().size() + " columnas)");
             validationLabel.setForeground(new Color(40, 167, 69)); // Verde
             
             // Cargar datos en la tabla

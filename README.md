@@ -59,12 +59,5 @@ The classic single-file distribution:
 mvn clean package -DskipTests
 ```
 
-## Roadmap & Progress
-- [x] **Stage 1-2**: Upgrade to Java 17 and pin dependencies.
-- [x] **Stage 3**: Refactor to Core/CLI/Util architecture.
-- [x] **Stage 4**: Migrate to JUnit 5 with improved coverage.
-- [x] **Stage 5**: Create a modern Desktop UI (Swing + FlatLaf).
-- [x] **Stage 6**: Create native installers and portable versions using `jpackage`.
-
 ---
 *Maintained by: Hernán Lagos*

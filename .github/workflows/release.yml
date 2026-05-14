@@ -45,8 +45,8 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          # Buscar .dmg (Mac) o .deb y .rpm (Linux)
-          find target/installer -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -exec cp {} dist/ \;
+          # Agrupar las extensiones con paréntesis para que el -exec funcione con todas
+          find target/installer \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} dist/ \;
           # Crear portable zip
           mvn package -Pnative-app-image -DskipTests
           cd target/installer
@@ -56,8 +56,8 @@ jobs:
       - name: Prepare Artifacts (Windows)
         if: runner.os == 'Windows'
         run: |
-          mkdir dist
-          copy target\installer\*.msi dist\
+          if (!(Test-Path dist)) { mkdir dist }
+          Get-ChildItem target/installer/*.msi, target/installer/*.exe | Copy-Item -Destination dist/
           # Crear portable zip
           mvn package -Pnative-app-image -DskipTests
           Compress-Archive -Path target\installer\SAFBuilder -DestinationPath dist\SAFBuilder-Windows-Portable.zip

@@ -3,47 +3,56 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Se activa cuando creas un tag como v2.0.0
-  workflow_dispatch: # Permite ejecución manual desde la web para pruebas
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
-  contents: write # Necesario para crear el Release y subir archivos
+  contents: write
 
 jobs:
   build:
     name: Build on ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+
     strategy:
+      fail-fast: false
       matrix:
         include:
           # --- macOS Platforms ---
           - os: macos-15-intel
             architecture: x64
             name: macOS Intel
-            platform-suffix: Intel
-          - os: macos-latest
+            platform-suffix: macOS-Intel
+
+          - os: macos-15
             architecture: aarch64
             name: macOS Apple Silicon
-            platform-suffix: AppleSilicon
+            platform-suffix: macOS-AppleSilicon
 
-          # --- Linux Platforms (descomentar cuando sea necesario) ---
+          # --- Linux ---
           - os: ubuntu-latest
             architecture: x64
             name: Linux x64
-            platform-suffix: Linux
+            platform-suffix: Linux-x64
 
-          # --- Windows Platforms (descomentar cuando sea necesario) ---
+          # --- Windows ---
           - os: windows-latest
             architecture: x64
             name: Windows x64
-            platform-suffix: Windows
+            platform-suffix: Windows-x64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set APP_VERSION from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Building version: $VERSION"
+
       - name: Set up JDK 17
-        if: ${{ !env.ACT || runner.os != 'macOS' }}
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -51,48 +60,82 @@ jobs:
           architecture: ${{ matrix.architecture }}
           cache: 'maven'
 
-      - name: Install RPM tools (Linux)
+      - name: Install RPM tools Linux
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y rpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
 
       - name: Build Native Installer
-        run: |
-          mvn clean package -Pnative-installer -DskipTests
-          if [ "${{ runner.os }}" == "Linux" ]; then
-            # Generar también el RPM manualmente
-            $JAVA_HOME/bin/jpackage --type rpm --input target/app-jar --dest target/installer --name SAFBuilder --main-jar safbuilder.jar --main-class safbuilder.cli.BatchProcess --app-version 2.0.0 --vendor HernanLagos
-          fi
         shell: bash
+        run: |
+          mvn clean package -Pnative-installer -DskipTests -Dapp.version="$APP_VERSION"
 
-      - name: Prepare Artifacts (Linux/Mac)
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            # Si tu perfil Maven genera .deb, acá generamos además .rpm
+            $JAVA_HOME/bin/jpackage \
+              --type rpm \
+              --input target/app-jar \
+              --dest target/installer \
+              --name SAFBuilder \
+              --main-jar safbuilder.jar \
+              --main-class safbuilder.cli.BatchProcess \
+              --app-version "$APP_VERSION" \
+              --vendor HernanLagos
+          fi
+
+      - name: Prepare Installer Artifacts Linux and macOS
         if: runner.os != 'Windows'
-        run: |
-          mkdir -p dist
-          # Copiar instaladores nativos (.dmg en Mac, .deb y .rpm en Linux)
-          find target/installer \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} dist/ \;
-
-          # Renombrar archivos de Mac para incluir arquitectura (Intel / AppleSilicon)
-          if [ "${{ runner.os }}" == "macOS" ]; then
-            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-${{ matrix.platform-suffix }}.dmg"; done
-          fi
         shell: bash
-
-      - name: Prepare Artifacts (Windows)
-        if: runner.os == 'Windows'
         run: |
-          if (!(Test-Path dist)) { mkdir dist }
-          # Copiar instaladores nativos (.msi y .exe)
-          Get-ChildItem target/installer/*.msi, target/installer/*.exe | Copy-Item -Destination dist/
-        shell: pwsh
+          rm -rf dist
+          mkdir -p dist
 
-      - name: Upload Artifacts for Inspection
+          # Solo instaladores nativos. No ZIP, no TAR.GZ, no app-image, no JAR portable.
+          find target/installer \
+            \( -name "*.dmg" -o -name "*.pkg" -o -name "*.deb" -o -name "*.rpm" \) \
+            -type f \
+            -exec cp {} dist/ \;
+
+          # Renombrar instaladores macOS con arquitectura
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            for f in dist/*.dmg dist/*.pkg; do
+              [ -e "$f" ] || continue
+              ext="${f##*.}"
+              base="${f%.$ext}"
+              mv "$f" "${base}-${{ matrix.platform-suffix }}.${ext}"
+            done
+          fi
+
+          echo "Installers prepared:"
+          ls -lh dist/
+
+      - name: Prepare Installer Artifacts Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path dist) {
+            Remove-Item dist -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Path dist | Out-Null
+
+          # Solo instaladores nativos. No ZIP, no portable, no JAR.
+          Get-ChildItem target/installer -Include *.msi, *.exe -Recurse |
+            Copy-Item -Destination dist
+
+          Write-Host "Installers prepared:"
+          Get-ChildItem dist
+
+      - name: Upload Installers for Inspection
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: SAFBuilder-${{ matrix.platform-suffix }}-Binaries
+          name: SAFBuilder-${{ matrix.platform-suffix }}-Installers
           path: dist/*
+          if-no-files-found: error
 
-      - name: Upload Release Assets
+      - name: Upload Release Installers
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:

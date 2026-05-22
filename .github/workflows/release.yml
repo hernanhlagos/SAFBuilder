@@ -10,36 +10,9 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build on ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # --- macOS Platforms ---
-          - os: macos-15-intel
-            architecture: x64
-            name: macOS Intel
-            platform-suffix: macOS-Intel
-
-          - os: macos-15
-            architecture: aarch64
-            name: macOS Apple Silicon
-            platform-suffix: macOS-AppleSilicon
-
-          # --- Linux ---
-          - os: ubuntu-latest
-            architecture: x64
-            name: Linux x64
-            platform-suffix: Linux-x64
-
-          # --- Windows ---
-          - os: windows-latest
-            architecture: x64
-            name: Windows x64
-            platform-suffix: Windows-x64
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -57,61 +30,15 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          architecture: ${{ matrix.architecture }}
+          architecture: x64
           cache: 'maven'
 
-      - name: Install RPM tools Linux
-        if: runner.os == 'Linux'
+      - name: Build Windows Installer
+        shell: pwsh
         run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm
+          mvn clean package -Pnative-installer -DskipTests -Dapp.version="$env:APP_VERSION"
 
-      - name: Build Native Installer
-        shell: bash
-        run: |
-          mvn clean package -Pnative-installer -DskipTests -Dapp.version="$APP_VERSION"
-
-          if [ "${{ runner.os }}" = "Linux" ]; then
-            # Si tu perfil Maven genera .deb, acá generamos además .rpm
-            $JAVA_HOME/bin/jpackage \
-              --type rpm \
-              --input target/app-jar \
-              --dest target/installer \
-              --name SAFBuilder \
-              --main-jar safbuilder.jar \
-              --main-class safbuilder.cli.BatchProcess \
-              --app-version "$APP_VERSION" \
-              --vendor HernanLagos
-          fi
-
-      - name: Prepare Installer Artifacts Linux and macOS
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          rm -rf dist
-          mkdir -p dist
-
-          # Solo instaladores nativos. No ZIP, no TAR.GZ, no app-image, no JAR portable.
-          find target/installer \
-            \( -name "*.dmg" -o -name "*.pkg" -o -name "*.deb" -o -name "*.rpm" \) \
-            -type f \
-            -exec cp {} dist/ \;
-
-          # Renombrar instaladores macOS con arquitectura
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            for f in dist/*.dmg dist/*.pkg; do
-              [ -e "$f" ] || continue
-              ext="${f##*.}"
-              base="${f%.$ext}"
-              mv "$f" "${base}-${{ matrix.platform-suffix }}.${ext}"
-            done
-          fi
-
-          echo "Installers prepared:"
-          ls -lh dist/
-
-      - name: Prepare Installer Artifacts Windows
-        if: runner.os == 'Windows'
+      - name: Prepare Installer Artifact
         shell: pwsh
         run: |
           if (Test-Path dist) {
@@ -120,22 +47,33 @@ jobs:
 
           New-Item -ItemType Directory -Path dist | Out-Null
 
-          # Solo instaladores nativos. No ZIP, no portable, no JAR.
-          Get-ChildItem target/installer -Include *.msi, *.exe -Recurse |
+          Get-ChildItem target/installer -Include *.exe, *.msi -Recurse |
             Copy-Item -Destination dist
 
           Write-Host "Installers prepared:"
           Get-ChildItem dist
 
-      - name: Upload Installers for Inspection
+      - name: Verify only installer files
+        shell: pwsh
+        run: |
+          $invalid = Get-ChildItem dist -Recurse | Where-Object {
+            $_.Extension -notin ".exe", ".msi"
+          }
+
+          if ($invalid) {
+            Write-Host "Invalid files detected:"
+            $invalid
+            exit 1
+          }
+
+      - name: Upload Installer for Inspection
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
-          name: SAFBuilder-${{ matrix.platform-suffix }}-Installers
+          name: SAFBuilder-Windows-Installer
           path: dist/*
           if-no-files-found: error
 
-      - name: Upload Release Installers
+      - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:

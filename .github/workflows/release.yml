@@ -68,28 +68,21 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          # Agrupar las extensiones con paréntesis para que el -exec funcione con todas
+          # Copiar instaladores nativos (.dmg en Mac, .deb y .rpm en Linux)
           find target/installer \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} dist/ \;
-          
-          # Renombrar archivos de Mac para incluir arquitectura
+
+          # Renombrar archivos de Mac para incluir arquitectura (Intel / AppleSilicon)
           if [ "${{ runner.os }}" == "macOS" ]; then
             for f in dist/*.dmg; do mv "$f" "${f%.dmg}-${{ matrix.platform-suffix }}.dmg"; done
           fi
-
-          # Crear portable zip
-          mvn package -Pnative-app-image -DskipTests
-          cd target/installer
-          zip -r ../../dist/SAFBuilder-${{ matrix.platform-suffix }}-Portable.zip SAFBuilder*
         shell: bash
 
       - name: Prepare Artifacts (Windows)
         if: runner.os == 'Windows'
         run: |
           if (!(Test-Path dist)) { mkdir dist }
+          # Copiar instaladores nativos (.msi y .exe)
           Get-ChildItem target/installer/*.msi, target/installer/*.exe | Copy-Item -Destination dist/
-          # Crear portable zip
-          mvn package -Pnative-app-image -DskipTests
-          Compress-Archive -Path target\installer\SAFBuilder -DestinationPath dist\SAFBuilder-${{ matrix.platform-suffix }}-Portable.zip
         shell: pwsh
 
       - name: Upload Artifacts for Inspection

@@ -11,21 +11,44 @@ permissions:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+        include:
+          # --- macOS Platforms ---
+          - os: macos-15-intel
+            architecture: x64
+            name: macOS Intel
+            platform-suffix: Intel
+          - os: macos-latest
+            architecture: aarch64
+            name: macOS Apple Silicon
+            platform-suffix: AppleSilicon
+
+          # --- Linux Platforms (descomentar cuando sea necesario) ---
+          - os: ubuntu-latest
+            architecture: x64
+            name: Linux x64
+            platform-suffix: Linux
+
+          # --- Windows Platforms (descomentar cuando sea necesario) ---
+          - os: windows-latest
+            architecture: x64
+            name: Windows x64
+            platform-suffix: Windows
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
+        if: ${{ !env.ACT || runner.os != 'macOS' }}
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          architecture: ${{ matrix.architecture }}
           cache: 'maven'
 
       - name: Install RPM tools (Linux)
@@ -37,7 +60,7 @@ jobs:
           mvn clean package -Pnative-installer -DskipTests
           if [ "${{ runner.os }}" == "Linux" ]; then
             # Generar también el RPM manualmente
-            jpackage --type rpm --input target/app-jar --dest target/installer --name SAFBuilder --main-jar safbuilder.jar --main-class safbuilder.cli.BatchProcess --app-version 2.0.0 --vendor HernanLagos
+            $JAVA_HOME/bin/jpackage --type rpm --input target/app-jar --dest target/installer --name SAFBuilder --main-jar safbuilder.jar --main-class safbuilder.cli.BatchProcess --app-version 2.0.0 --vendor HernanLagos
           fi
         shell: bash
 
@@ -49,16 +72,14 @@ jobs:
           find target/installer \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -exec cp {} dist/ \;
           
           # Renombrar archivos de Mac para incluir arquitectura
-          if [ "${{ matrix.os }}" == "macos-13" ]; then
-            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-Intel.dmg"; done
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-AppleSilicon.dmg"; done
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            for f in dist/*.dmg; do mv "$f" "${f%.dmg}-${{ matrix.platform-suffix }}.dmg"; done
           fi
 
           # Crear portable zip
           mvn package -Pnative-app-image -DskipTests
           cd target/installer
-          zip -r ../../dist/SAFBuilder-${{ matrix.os }}-Portable.zip SAFBuilder*
+          zip -r ../../dist/SAFBuilder-${{ matrix.platform-suffix }}-Portable.zip SAFBuilder*
         shell: bash
 
       - name: Prepare Artifacts (Windows)
@@ -68,13 +89,14 @@ jobs:
           Get-ChildItem target/installer/*.msi, target/installer/*.exe | Copy-Item -Destination dist/
           # Crear portable zip
           mvn package -Pnative-app-image -DskipTests
-          Compress-Archive -Path target\installer\SAFBuilder -DestinationPath dist\SAFBuilder-Windows-Portable.zip
+          Compress-Archive -Path target\installer\SAFBuilder -DestinationPath dist\SAFBuilder-${{ matrix.platform-suffix }}-Portable.zip
         shell: pwsh
 
       - name: Upload Artifacts for Inspection
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
-          name: SAFBuilder-${{ matrix.os }}-Binaries
+          name: SAFBuilder-${{ matrix.platform-suffix }}-Binaries
           path: dist/*
 
       - name: Upload Release Assets

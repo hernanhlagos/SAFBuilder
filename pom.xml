@@ -266,7 +266,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>jpackage</executable>
+                                    <executable>${java.home}/bin/jpackage</executable>
                                     <commandlineArgs>
                                         --input ${project.build.directory}/app-jar
                                         --dest ${project.build.directory}/installer
@@ -322,7 +322,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>jpackage</executable>
+                                    <executable>${java.home}/bin/jpackage</executable>
                                     <commandlineArgs>
                                         --input ${project.build.directory}/app-jar
                                         --dest ${project.build.directory}/installer

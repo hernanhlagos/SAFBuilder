@@ -36,7 +36,7 @@ jobs:
       - name: Build Windows Installer
         shell: pwsh
         run: |
-          mvn clean package -Pnative-installer -DskipTests -Dapp.version="$env:APP_VERSION"
+          mvn clean package -Pnative-installer "-DskipTests" "-Dapp.version=$env:APP_VERSION"
 
       - name: Prepare Installer Artifact
         shell: pwsh

@@ -22,6 +22,7 @@
     <properties>
         <!-- Build -->
         <java.version>17</java.version>
+        <app.version>2.0.0</app.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -296,7 +297,7 @@
                                         --name SAFBuilder
                                         --main-jar safbuilder.jar
                                         --main-class safbuilder.cli.BatchProcess
-                                        --app-version 2.0.0
+                                        --app-version ${app.version}
                                         --vendor HernanLagos
                                         --copyright "Copyright 2025"
                                         --description "DSpace SAF Package Builder"
@@ -354,7 +355,7 @@
                                         --main-jar safbuilder.jar
                                         --main-class safbuilder.cli.BatchProcess
                                         --type app-image
-                                        --app-version 2.0.0
+                                        --app-version ${app.version}
                                         --vendor HernanLagos
                                         --copyright "Copyright 2025"
                                         --description "DSpace SAF Package Builder"

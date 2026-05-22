@@ -47,6 +47,10 @@
         <!-- UI -->
         <flatlaf.version>3.5.4</flatlaf.version>
 
+        <!-- jpackage icon args are OS-specific -->
+        <jpackage.icon.args></jpackage.icon.args>
+        <jpackage.installer.args></jpackage.installer.args>
+
         <!-- Test -->
         <junit.version>5.11.3</junit.version>
         <mockito.version>5.14.2</mockito.version>
@@ -227,7 +231,26 @@
                 <os><family>windows</family></os>
             </activation>
             <properties>
-                <jpackage.os.args>--win-shortcut --win-menu</jpackage.os.args>
+                <jpackage.icon.args>--icon ${project.basedir}/src/main/resources/icons/safbuilder.ico</jpackage.icon.args>
+                <jpackage.installer.args>--win-shortcut --win-menu</jpackage.installer.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>os-mac</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <properties>
+                <jpackage.icon.args>--icon ${project.basedir}/src/main/resources/icons/safbuilder.icns</jpackage.icon.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>os-linux</id>
+            <activation>
+                <os><name>Linux</name></os>
+            </activation>
+            <properties>
+                <jpackage.icon.args>--icon ${project.basedir}/src/main/resources/icons/safbuilder.png</jpackage.icon.args>
             </properties>
         </profile>
         <profile>
@@ -277,7 +300,8 @@
                                         --vendor HernanLagos
                                         --copyright "Copyright 2025"
                                         --description "DSpace SAF Package Builder"
-                                        ${jpackage.os.args}
+                                        ${jpackage.icon.args}
+                                        ${jpackage.installer.args}
                                     </commandlineArgs>
                                 </configuration>
                             </execution>
@@ -334,6 +358,7 @@
                                         --vendor HernanLagos
                                         --copyright "Copyright 2025"
                                         --description "DSpace SAF Package Builder"
+                                        ${jpackage.icon.args}
                                     </commandlineArgs>
                                 </configuration>
                             </execution>
